@@ -7,7 +7,7 @@ import 'dart:async' as _i5;
 
 import 'package:drift/drift.dart' as _i3;
 import 'package:drift/src/runtime/executor/stream_queries.dart' as _i4;
-import 'package:flutter_database_drift/data/database.dart' as _i2;
+import 'package:flutter_database_drift/model/database.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:mockito/src/dummies.dart' as _i6;
 

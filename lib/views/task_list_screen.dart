@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_database_drift/data/database.dart';
+import 'package:flutter_database_drift/model/database.dart';
 import 'package:flutter_database_drift/view_model/task_view_model.dart';
 import 'package:provider/provider.dart';
 
+/// A StatelessWidget that displays the list of tasks.
+/// It observes the [TaskViewModel] for data changes and dispatches user actions.
 class TaskListScreen extends StatelessWidget {
   const TaskListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Получаем ViewModel из Provider
+    // Retrieve the ViewModel from the Provider
     final viewModel = Provider.of<TaskViewModel>(context, listen: false);
 
     return Scaffold(
@@ -16,7 +18,7 @@ class TaskListScreen extends StatelessWidget {
         title: const Text('Task List (MVVM + Drift)'),
       ),
       body: StreamBuilder<List<Task>>(
-        stream: viewModel.tasksStream, // Слушаем поток из ViewModel
+        stream: viewModel.tasksStream, // Listen to the stream from the ViewModel
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -42,16 +44,15 @@ class TaskListScreen extends StatelessWidget {
                 ),
                 leading: Checkbox(
                   value: task.completed,
-                  
                   onChanged: (_) {
-                    // Вызываем метод ViewModel
+                    // Call ViewModel method
                     viewModel.toggleTaskStatus(task);
                   },
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),
                   onPressed: () {
-                    // Вызываем метод ViewModel
+                    // Call ViewModel method
                     viewModel.removeTask(task);
                   },
                 ),
@@ -67,6 +68,9 @@ class TaskListScreen extends StatelessWidget {
     );
   }
 
+  /// Shows a dialog to add a new task.
+  /// [context]: The build context.
+  /// [viewModel]: The [TaskViewModel] to interact with.
   void _showAddTaskDialog(BuildContext context, TaskViewModel viewModel) {
     final controller = TextEditingController();
     showDialog(
@@ -86,7 +90,7 @@ class TaskListScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                // Вызываем метод ViewModel
+                // Call ViewModel method
                 viewModel.addNewTask(controller.text);
                 Navigator.of(context).pop();
               }

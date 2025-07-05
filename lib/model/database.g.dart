@@ -111,8 +111,13 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
 }
 
 class Task extends DataClass implements Insertable<Task> {
+  /// Unique identifier for the task. Auto-increments.
   final int id;
+
+  /// The title or description of the task. Must be between 1 and 50 characters.
   final String title;
+
+  /// Indicates whether the task is completed. Defaults to false.
   final bool completed;
   const Task({required this.id, required this.title, required this.completed});
   @override

@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_database_drift/data/database.dart';
-import 'package:flutter_database_drift/data/task_repository.dart';
+import 'package:flutter_database_drift/model/database.dart';
+import 'package:flutter_database_drift/repository/task_repository.dart';
 import 'package:flutter_database_drift/view_model/task_view_model.dart';
 import 'package:flutter_database_drift/views/task_list_screen.dart';
 import 'package:provider/provider.dart';
 
+/// Main entry point of the Flutter application.
 void main() {
-  // Создаем единственный экземпляр базы данных
+  // Create a single instance of the database
   final database = AppDatabase();
-  // Создаем единственный экземпляр репозитория
+  // Create a single instance of the repository, injecting the database
   final repository = TaskRepository(database);
-  // Создаем единственный экземplяр ViewModel
+  // Create a single instance of the ViewModel, injecting the repository
   final viewModel = TaskViewModel(repository);
 
   runApp(
-    // Передаем ViewModel в дерево виджетов
+    // Provide the ViewModel to the widget tree using ChangeNotifierProvider
     ChangeNotifierProvider(
       create: (context) => viewModel,
       child: const MyApp(),
@@ -22,6 +23,7 @@ void main() {
   );
 }
 
+/// The root widget of the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -31,6 +33,7 @@ class MyApp extends StatelessWidget {
       title: 'MVVM Drift To-Do App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        
       ),
       home: const TaskListScreen(),
     );

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
-import 'package:flutter_database_drift/data/database.dart';
-import 'package:flutter_database_drift/data/task_repository.dart';
+import 'package:flutter_database_drift/model/database.dart';
+import 'package:flutter_database_drift/repository/task_repository.dart';
 import 'package:flutter_database_drift/view_model/task_view_model.dart';
 
 import 'task_view_model_test.mocks.dart'; // Сгенерированный файл моков
