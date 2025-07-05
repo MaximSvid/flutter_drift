@@ -22,37 +22,43 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+        working-directory: flutter_database_drift
 
       - name: Analyze code
         run: flutter analyze
+        working-directory: flutter_database_drift
 
       - name: Run tests
         run: flutter test
+        working-directory: flutter_database_drift
 
       - name: Build Android (APK)
         run: flutter build apk --release
+        working-directory: flutter_database_drift
 
       - name: Build iOS (App Bundle)
         run: flutter build ios --no-codesign # --no-codesign, так как для подписи нужны сертификаты
+        working-directory: flutter_database_drift
 
       - name: Build Web
         run: flutter build web
+        working-directory: flutter_database_drift
 
       # Опционально: Загрузка артефактов
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: flutter_database_drift/build/app/outputs/flutter-apk/app-release.apk
 
       - name: Upload iOS App Bundle
         uses: actions/upload-artifact@v4
         with:
           name: ios-app-bundle
-          path: build/ios/iphoneos/Runner.app
+          path: flutter_database_drift/build/ios/iphoneos/Runner.app
 
       - name: Upload Web Build
         uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: build/web
+          path: flutter_database_drift/build/web
