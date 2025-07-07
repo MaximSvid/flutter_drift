@@ -1,11 +1,15 @@
 import 'dart:convert';
 
-import 'package:drift/drift.dart';
 import 'package:flutter_database_drift/model/database.dart';
 import 'package:flutter_database_drift/repositories/task_repository/task_repository.dart';
 import 'package:flutter_database_drift/data/network/http_client.dart';
-import 'package:http/http.dart' as http; // For http.Response
 
+/// Implementation of TaskRepository that handles both local database operations
+/// and remote API operations with a Spring Boot backend.
+/// It uses the AppDatabase for local storage and HttpClient for network requests.
+/// This class provides methods to add, update, delete, and watch tasks,
+/// ensuring that changes are synchronized between the local database and the server.
+/// It also handles sending tasks to the server immediately after local operations.
 class TaskRepositoryImplementation implements TaskRepository {
   final AppDatabase _localDb;
   final HttpClient _httpClient;
