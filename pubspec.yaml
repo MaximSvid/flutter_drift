@@ -37,7 +37,6 @@ dependencies:
   path_provider: ^2.0.11
   path: ^1.8.2
   provider: ^6.0.5 # For MVVM architecture
-  http: ^1.4.0 # For network requests
 
   cupertino_icons: ^1.0.8
 

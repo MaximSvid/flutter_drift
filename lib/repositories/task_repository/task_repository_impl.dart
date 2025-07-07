@@ -1,16 +1,18 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
 import 'package:flutter_database_drift/model/database.dart';
 import 'package:flutter_database_drift/repositories/task_repository/task_repository.dart';
-import 'package:flutter_database_drift/data/network/http_client.dart'; // NEW import
+import 'package:flutter_database_drift/data/network/http_client.dart';
+import 'package:http/http.dart' as http; // For http.Response
 
 class TaskRepositoryImplementation implements TaskRepository {
   final AppDatabase _localDb;
-  final HttpClient _httpClient; // NEW: Use our abstract HttpClient
+  final HttpClient _httpClient;
 
   TaskRepositoryImplementation(
     this._localDb,
-    this._httpClient, // NEW: Receive HttpClient via constructor
+    this._httpClient,
   );
 
   // Local Database Operations
@@ -22,36 +24,33 @@ class TaskRepositoryImplementation implements TaskRepository {
   @override
   Future<int> addTask(TasksCompanion entry) async {
     final localId = await _localDb.addTask(entry);
-    print('Task added with ID: $localId');
-    // Now _sendTaskToServer returns Future<void>
-    _sendTaskToServer(entry); // Still fire-and-forget for UI responsiveness
+    print('Task added locally with ID: $localId');
+    _sendTaskToServer(entry); // Send to server immediately
     return localId;
   }
 
   @override
   Future<bool> updateTask(Task entry) async {
     final result = await _localDb.updateTask(entry);
-    // NEW: Send update to server
-    _updateTaskToServer(entry);
+    print('Task updated locally: ${entry.id}');
+    _updateTaskToServer(entry); // Send update to server immediately
     return result;
   }
 
   @override
   Future<int> deleteTask(Task entry) async {
     final result = await _localDb.deleteTask(entry);
-    print('Task deleted with ID: ${entry.id}');
-    // NEW: Send delete to server
-    _deleteTaskToServer(entry);
+    print('Task deleted locally with ID: ${entry.id}');
+    _deleteTaskToServer(entry); // Send delete to server immediately
     return result;
   }
 
   // --- Remote-API-Operations (Spring Boot Backend) ---
 
-  // Modified to return Future<void> for better testability
   Future<void> _sendTaskToServer(TasksCompanion entry) async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/tasks'); // CHANGED to 10.0.2.2
+    final url = Uri.parse('http://10.0.2.2:8080/api/tasks'); // Use 10.0.2.2 for Android emulator
     try {
-      final response = await _httpClient.post( // Use _httpClient here
+      final response = await _httpClient.post(
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -60,7 +59,8 @@ class TaskRepositoryImplementation implements TaskRepository {
         }),
       );
       if (response.statusCode == 200) {
-        print('Task sent to server successfully');
+        print('Task sent to server successfully: ${response.body}');
+        // Here you might want to update the local task with the server-assigned ID
       } else {
         print('Failed to send task to server: ${response.statusCode} - ${response.body}');
       }
@@ -69,15 +69,14 @@ class TaskRepositoryImplementation implements TaskRepository {
     }
   }
 
-  // NEW: Method to send task update to server
   Future<void> _updateTaskToServer(Task entry) async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/tasks/${entry.id}'); // CHANGED to 10.0.2.2
+    final url = Uri.parse('http://10.0.2.2:8080/api/tasks/${entry.id}'); // Use 10.0.2.2 for Android emulator
     try {
-      final response = await _httpClient.post( // Using POST for simplicity, ideally PUT
+      final response = await _httpClient.put( // Use PUT for update
         url,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'id': entry.id, // Include ID for update
+          'id': entry.id,
           'title': entry.title,
           'completed': entry.completed,
         }),
@@ -92,18 +91,14 @@ class TaskRepositoryImplementation implements TaskRepository {
     }
   }
 
-  // NEW: Method to send task delete to server
   Future<void> _deleteTaskToServer(Task entry) async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/tasks/${entry.id}'); // CHANGED to 10.0.2.2
+    final url = Uri.parse('http://10.0.2.2:8080/api/tasks/${entry.id}'); // Use 10.0.2.2 for Android emulator
     try {
-      final response = await _httpClient.delete( // Using POST for simplicity, ideally DELETE
+      final response = await _httpClient.delete( // Use DELETE for delete
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'id': entry.id, // Include ID for delete
-        }),
       );
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 204) {
         print('Task delete sent to server successfully');
       } else {
         print('Failed to send task delete to server: ${response.statusCode} - ${response.body}');

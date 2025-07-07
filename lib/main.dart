@@ -5,18 +5,18 @@ import 'package:flutter_database_drift/repositories/task_repository/task_reposit
 import 'package:flutter_database_drift/view_model/task_view_model.dart';
 import 'package:flutter_database_drift/views/task_list_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_database_drift/data/network/http_client.dart'; // NEW import
-import 'package:flutter_database_drift/data/network/http_client_impl.dart'; // NEW import
+import 'package:flutter_database_drift/data/network/http_client.dart';
+import 'package:flutter_database_drift/data/network/http_client_impl.dart';
 
 /// Main entry point of the Flutter application.
 void main() {
   runApp(
     MultiProvider(
       providers: [
-        // NEW: Provide HttpClient
-        Provider<HttpClient>(
-          create: (_) => HttpClientImpl(),
-        ),
+        // Provide HttpClient
+        Provider<HttpClient>( // NEW
+          create: (_) => HttpClientImpl(), // NEW
+        ), // NEW
         // 1. Drift database instance
         Provider<AppDatabase>(
           create: (_) => AppDatabase(),
