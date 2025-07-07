@@ -1,39 +1,41 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_database_drift/model/database.dart';
-import 'package:flutter_database_drift/repository/task_repository.dart';
+import 'package:flutter_database_drift/repositories/task_repository/task_repository.dart';
 
 /// ViewModel for managing task-related UI logic and data flow.
 /// It interacts with the [TaskRepository] to perform data operations
 /// and notifies its listeners about changes.
 class TaskViewModel extends ChangeNotifier {
-  final TaskRepository _repository;
+  final TaskRepository _taskRepository;
 
-  /// Stream of tasks that the UI can listen to for real-time updates.
-  late final Stream<List<Task>> tasksStream;
+  Stream<List<Task>> get tasks => _taskRepository.watchAllTasks();
 
-  /// Constructs a [TaskViewModel] with the given [TaskRepository] instance.
-  TaskViewModel(this._repository) {
-    tasksStream = _repository.watchAllTasks();
+  TaskViewModel(this._taskRepository);
+
+  get tasksStream => null;
+
+  Future<int> addTask(String title) async {
+    if (title.isEmpty) return Future.value(0);
+    final entry = TasksCompanion(
+      title: Value(title),
+      completed: const Value(false),
+    );
+    return await _taskRepository.addTask(entry);
   }
 
-  // --- Methods called by the View ---
-
-  /// Adds a new task to the repository.
-  /// [title]: The title of the new task.
-  Future<void> addNewTask(String title) async {
-    await _repository.addTask(title);
+  // NEW: Update task status
+  Future<void> updateTaskStatus(Task task, bool completed) async {
+    final updatedTask = task.copyWith(completed: completed);
+    await _taskRepository.updateTask(updatedTask);
+    // No need for notifyListeners() here, as the StreamBuilder in the UI will react to changes from the repository.
   }
 
-  /// Toggles the completion status of a given task.
-  /// [task]: The task whose status needs to be toggled.
-  Future<void> toggleTaskStatus(Task task) async {
-    final newStatus = !task.completed;
-    await _repository.updateTask(task.copyWith(completed: newStatus));
+  // NEW: Delete task
+  Future<void> deleteTask(Task task) async {
+    await _taskRepository.deleteTask(task);
+    // No need for notifyListeners() here, as the StreamBuilder in the UI will react to changes from the repository.
   }
 
-  /// Removes a task from the repository.
-  /// [task]: The task to be removed.
-  Future<void> removeTask(Task task) async {
-    await _repository.deleteTask(task);
-  }
+  Future<void> addNewTask(String s) async {}
 }
