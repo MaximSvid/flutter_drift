@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_database_drift/model/database.dart';
-import 'package:flutter_database_drift/repositories/task_repository/task_repository.dart';
-import 'package:flutter_database_drift/repositories/task_repository/task_repository_impl.dart';
-import 'package:flutter_database_drift/view_model/task_view_model.dart';
-import 'package:flutter_database_drift/views/task_list_screen.dart';
+import 'package:flutter_database_drift/src/model/database.dart';
+import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
+import 'package:flutter_database_drift/src/repositories/task_repository/task_repository_impl.dart';
+
+import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
+import 'package:flutter_database_drift/src/views/task_list_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_database_drift/data/network/http_client.dart';
-import 'package:flutter_database_drift/data/network/http_client_impl.dart';
+import 'package:flutter_database_drift/src/network/http_client.dart';
+import 'package:flutter_database_drift/src/network/http_client_impl.dart';
 
 /// Main entry point of the Flutter application.
 void main() {

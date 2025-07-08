@@ -1,7 +1,8 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_database_drift/model/database.dart';
-import 'package:flutter_database_drift/repositories/task_repository/task_repository.dart'; // Corrected import
+import 'package:flutter_database_drift/src/model/database.dart';
+import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
+
 
 /// ViewModel for managing task-related UI logic and data flow.
 /// It interacts with the [TaskRepository] to perform data operations

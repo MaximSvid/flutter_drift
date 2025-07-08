@@ -1,5 +1,5 @@
 import 'package:http/http.dart' as http;
-import 'package:flutter_database_drift/data/network/http_client.dart';
+import 'package:flutter_database_drift/src/network/http_client.dart';
 
 class HttpClientImpl implements HttpClient {
   final http.Client _client;

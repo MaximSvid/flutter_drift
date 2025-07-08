@@ -1,4 +1,4 @@
-import 'package:flutter_database_drift/model/database.dart';
+import 'package:flutter_database_drift/src/model/database.dart';
 
 /// Abstract class defining the interface for task-related operations.
 /// This allows for easy mocking and testing of task-related data operations.

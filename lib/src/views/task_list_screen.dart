@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_database_drift/model/database.dart';
-import 'package:flutter_database_drift/view_model/task_view_model.dart';
+import 'package:flutter_database_drift/src/model/database.dart';
+import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
 import 'package:provider/provider.dart';
 
 /// A StatelessWidget that displays the list of tasks.
