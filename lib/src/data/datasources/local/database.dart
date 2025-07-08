@@ -33,15 +33,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<Task>> getDirtyTasks() async {
-    return (select(tasks)..where((t) => t.syncStatus.equalsValue(SyncStatus.pendingCreate) | t.syncStatus.equalsValue(SyncStatus.pendingUpdate) | t.syncStatus.equalsValue(SyncStatus.pendingDelete))).get();
+    return (select(tasks)..where((t) => t.syncStatus.equalsValue(SyncStatus.PENDING_CREATE) | t.syncStatus.equalsValue(SyncStatus.PENDING_UPDATE) | t.syncStatus.equalsValue(SyncStatus.PENDING_DELETE))).get();
   }
 
   Future<void> markAsCreatedOnServer(int localId, int serverId) async {
-    await (update(tasks)..where((t) => t.id.equals(localId))).write(TasksCompanion(serverId: Value(serverId), syncStatus: Value(SyncStatus.synced)));
+    await (update(tasks)..where((t) => t.id.equals(localId))).write(TasksCompanion(serverId: Value(serverId), syncStatus: Value(SyncStatus.SYNCED)));
   }
 
   Future<void> markAsSynced(int localId) async {
-    await (update(tasks)..where((t) => t.id.equals(localId))).write(const TasksCompanion(syncStatus: Value(SyncStatus.synced)));
+    await (update(tasks)..where((t) => t.id.equals(localId))).write(const TasksCompanion(syncStatus: Value(SyncStatus.SYNCED)));
   }
 
   Future<void> deleteTaskPermanently(int localId) async {

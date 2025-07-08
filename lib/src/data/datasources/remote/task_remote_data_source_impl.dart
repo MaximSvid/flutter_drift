@@ -16,8 +16,11 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(task.toJson()),
     );
-    if (response.statusCode == 200) {
-      return Task.fromJson(jsonDecode(response.body));
+    if (response.statusCode == 201) {
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+      // Map 'id' from backend response to 'serverId' for Flutter Task model
+      jsonResponse['serverId'] = jsonResponse['id'];
+      return Task.fromJson(jsonResponse);
     } else {
       throw Exception('Failed to create task');
     }

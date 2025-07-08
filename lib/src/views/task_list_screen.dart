@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart'; // Import uuid package
 
 /// A StatelessWidget that displays the list of tasks.
 /// It observes the [TaskViewModel] for data changes and dispatches user actions.
 class TaskListScreen extends StatelessWidget { // Keeping as StatelessWidget
   const TaskListScreen({super.key});
+
+  // Create a Uuid generator instance
+  static final _uuid = Uuid();
 
   @override
   Widget build(BuildContext context) {
@@ -96,8 +100,10 @@ class TaskListScreen extends StatelessWidget { // Keeping as StatelessWidget
           TextButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                // Call ViewModel method
-                viewModel.addTask(controller.text); // CHANGED: to addTask
+                // Generate a new UUID
+                final newUuid = _uuid.v4();
+                // Call ViewModel method with UUID
+                viewModel.addTask(newUuid, controller.text); // Pass UUID
                 Navigator.of(context).pop();
               }
             },

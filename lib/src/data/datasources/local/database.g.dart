@@ -21,6 +21,16 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
@@ -57,7 +67,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: false,
-        defaultValue: Constant(SyncStatus.pendingCreate.name),
+        defaultValue: Constant(SyncStatus.PENDING_CREATE.name),
       ).withConverter<SyncStatus>($TasksTable.$convertersyncStatus);
   static const VerificationMeta _serverIdMeta = const VerificationMeta(
     'serverId',
@@ -103,6 +113,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    uuid,
     title,
     completed,
     syncStatus,
@@ -124,6 +135,14 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('title')) {
       context.handle(
@@ -170,6 +189,10 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}title'],
@@ -212,6 +235,9 @@ class Task extends DataClass implements Insertable<Task> {
   /// Unique identifier for the task. Auto-increments.
   final int id;
 
+  /// Unique identifier for the task, generated on the client side.
+  final String uuid;
+
   /// The title or description of the task. Must be between 1 and 50 characters.
   final String title;
 
@@ -232,6 +258,7 @@ class Task extends DataClass implements Insertable<Task> {
   final bool isSynced;
   const Task({
     required this.id,
+    required this.uuid,
     required this.title,
     required this.completed,
     required this.syncStatus,
@@ -243,6 +270,7 @@ class Task extends DataClass implements Insertable<Task> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['title'] = Variable<String>(title);
     map['completed'] = Variable<bool>(completed);
     {
@@ -261,6 +289,7 @@ class Task extends DataClass implements Insertable<Task> {
   TasksCompanion toCompanion(bool nullToAbsent) {
     return TasksCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       title: Value(title),
       completed: Value(completed),
       syncStatus: Value(syncStatus),
@@ -279,6 +308,7 @@ class Task extends DataClass implements Insertable<Task> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Task(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       title: serializer.fromJson<String>(json['title']),
       completed: serializer.fromJson<bool>(json['completed']),
       syncStatus: serializer.fromJson<SyncStatus>(json['syncStatus']),
@@ -292,6 +322,7 @@ class Task extends DataClass implements Insertable<Task> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'title': serializer.toJson<String>(title),
       'completed': serializer.toJson<bool>(completed),
       'syncStatus': serializer.toJson<SyncStatus>(syncStatus),
@@ -303,6 +334,7 @@ class Task extends DataClass implements Insertable<Task> {
 
   Task copyWith({
     int? id,
+    String? uuid,
     String? title,
     bool? completed,
     SyncStatus? syncStatus,
@@ -311,6 +343,7 @@ class Task extends DataClass implements Insertable<Task> {
     bool? isSynced,
   }) => Task(
     id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
     title: title ?? this.title,
     completed: completed ?? this.completed,
     syncStatus: syncStatus ?? this.syncStatus,
@@ -321,6 +354,7 @@ class Task extends DataClass implements Insertable<Task> {
   Task copyWithCompanion(TasksCompanion data) {
     return Task(
       id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       title: data.title.present ? data.title.value : this.title,
       completed: data.completed.present ? data.completed.value : this.completed,
       syncStatus: data.syncStatus.present
@@ -336,6 +370,7 @@ class Task extends DataClass implements Insertable<Task> {
   String toString() {
     return (StringBuffer('Task(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('title: $title, ')
           ..write('completed: $completed, ')
           ..write('syncStatus: $syncStatus, ')
@@ -349,6 +384,7 @@ class Task extends DataClass implements Insertable<Task> {
   @override
   int get hashCode => Object.hash(
     id,
+    uuid,
     title,
     completed,
     syncStatus,
@@ -361,6 +397,7 @@ class Task extends DataClass implements Insertable<Task> {
       identical(this, other) ||
       (other is Task &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.title == this.title &&
           other.completed == this.completed &&
           other.syncStatus == this.syncStatus &&
@@ -371,6 +408,7 @@ class Task extends DataClass implements Insertable<Task> {
 
 class TasksCompanion extends UpdateCompanion<Task> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<String> title;
   final Value<bool> completed;
   final Value<SyncStatus> syncStatus;
@@ -379,6 +417,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   final Value<bool> isSynced;
   const TasksCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.title = const Value.absent(),
     this.completed = const Value.absent(),
     this.syncStatus = const Value.absent(),
@@ -388,15 +427,18 @@ class TasksCompanion extends UpdateCompanion<Task> {
   });
   TasksCompanion.insert({
     this.id = const Value.absent(),
+    required String uuid,
     required String title,
     this.completed = const Value.absent(),
     this.syncStatus = const Value.absent(),
     this.serverId = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isSynced = const Value.absent(),
-  }) : title = Value(title);
+  }) : uuid = Value(uuid),
+       title = Value(title);
   static Insertable<Task> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? title,
     Expression<bool>? completed,
     Expression<String>? syncStatus,
@@ -406,6 +448,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (title != null) 'title': title,
       if (completed != null) 'completed': completed,
       if (syncStatus != null) 'sync_status': syncStatus,
@@ -417,6 +460,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
 
   TasksCompanion copyWith({
     Value<int>? id,
+    Value<String>? uuid,
     Value<String>? title,
     Value<bool>? completed,
     Value<SyncStatus>? syncStatus,
@@ -426,6 +470,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   }) {
     return TasksCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       title: title ?? this.title,
       completed: completed ?? this.completed,
       syncStatus: syncStatus ?? this.syncStatus,
@@ -440,6 +485,9 @@ class TasksCompanion extends UpdateCompanion<Task> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -468,6 +516,7 @@ class TasksCompanion extends UpdateCompanion<Task> {
   String toString() {
     return (StringBuffer('TasksCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('title: $title, ')
           ..write('completed: $completed, ')
           ..write('syncStatus: $syncStatus, ')
@@ -493,6 +542,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$TasksTableCreateCompanionBuilder =
     TasksCompanion Function({
       Value<int> id,
+      required String uuid,
       required String title,
       Value<bool> completed,
       Value<SyncStatus> syncStatus,
@@ -503,6 +553,7 @@ typedef $$TasksTableCreateCompanionBuilder =
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<String> title,
       Value<bool> completed,
       Value<SyncStatus> syncStatus,
@@ -521,6 +572,11 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -570,6 +626,11 @@ class $$TasksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get title => $composableBuilder(
     column: $table.title,
     builder: (column) => ColumnOrderings(column),
@@ -612,6 +673,9 @@ class $$TasksTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
@@ -664,6 +728,7 @@ class $$TasksTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<bool> completed = const Value.absent(),
                 Value<SyncStatus> syncStatus = const Value.absent(),
@@ -672,6 +737,7 @@ class $$TasksTableTableManager
                 Value<bool> isSynced = const Value.absent(),
               }) => TasksCompanion(
                 id: id,
+                uuid: uuid,
                 title: title,
                 completed: completed,
                 syncStatus: syncStatus,
@@ -682,6 +748,7 @@ class $$TasksTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                required String uuid,
                 required String title,
                 Value<bool> completed = const Value.absent(),
                 Value<SyncStatus> syncStatus = const Value.absent(),
@@ -690,6 +757,7 @@ class $$TasksTableTableManager
                 Value<bool> isSynced = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
+                uuid: uuid,
                 title: title,
                 completed: completed,
                 syncStatus: syncStatus,

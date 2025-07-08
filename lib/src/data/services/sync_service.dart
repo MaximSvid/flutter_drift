@@ -40,7 +40,7 @@ class SyncService {
       for (final task in dirtyTask) {
         try {
           switch (task.syncStatus) {
-            case SyncStatus.pendingCreate:
+            case SyncStatus.PENDING_CREATE:
               final syncedTask = await remoteDataSource.createTask(task);
               await localDataSource.markAsCreatedOnServer(
                 task.id,
@@ -48,7 +48,7 @@ class SyncService {
               );
               print('Synced Created task with ID: ${task.id}');
               break;
-            case SyncStatus.pendingUpdate:
+            case SyncStatus.PENDING_UPDATE:
               if (task.serverId != null) {
                 await remoteDataSource.updateTask(task);
                 await localDataSource.markAsSynced(task.id);
@@ -57,10 +57,10 @@ class SyncService {
                 // This task was marked for update but has no serverId.
                 // It means it was never created on the server. Re-mark as pendingCreate.
                 print('Warning: Task with ID: ${task.id} is pending update but has no serverId. Re-marking as pendingCreate.');
-                await localDataSource.updateTask(task.copyWith(syncStatus: SyncStatus.pendingCreate));
+                await localDataSource.updateTask(task.copyWith(syncStatus: SyncStatus.PENDING_CREATE));
               }
               break;
-            case SyncStatus.pendingDelete:
+            case SyncStatus.PENDING_DELETE:
               if (task.serverId != null) {
                 await remoteDataSource.deleteTask(task.serverId!);
                 await localDataSource.deleteTaskPermanently(task.id);
@@ -72,7 +72,7 @@ class SyncService {
                 await localDataSource.deleteTaskPermanently(task.id);
               }
               break;
-            case SyncStatus.synced:
+            case SyncStatus.SYNCED:
               print('Task with ID: ${task.id} is already synced.');
               break;
           }

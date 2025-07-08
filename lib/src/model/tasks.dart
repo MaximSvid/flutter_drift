@@ -8,10 +8,10 @@ import 'package:drift/drift.dart';
 /// This enum is useful for managing the synchronization process and ensuring that the local database
 /// and the server are in sync.
 enum SyncStatus{
-  synced, // Task is synced with the server
-  pendingCreate, // Task is pending creation on the server
-  pendingUpdate, // Task is pending update on the server
-  pendingDelete, // Task is pending deletion on the server
+  SYNCED, // Task is synced with the server
+  PENDING_CREATE, // Task is pending creation on the server
+  PENDING_UPDATE, // Task is pending update on the server
+  PENDING_DELETE, // Task is pending deletion on the server
 }
 
 class SyncStatusConverter extends TypeConverter<SyncStatus, String> {
@@ -34,6 +34,9 @@ class Tasks extends Table { // Moved back into this file
   /// Unique identifier for the task. Auto-increments.
   IntColumn get id => integer().autoIncrement()();
 
+  /// Unique identifier for the task, generated on the client side.
+  TextColumn get uuid => text().unique()();
+
   /// The title or description of the task. Must be between 1 and 50 characters.
   TextColumn get title => text().withLength(min: 1, max: 50)();
 
@@ -43,7 +46,7 @@ class Tasks extends Table { // Moved back into this file
 //----------Синхронизация с сервером----------//
 
 TextColumn get syncStatus => text().map(const SyncStatusConverter
-      ()).withDefault(Constant(SyncStatus.pendingCreate.name))();
+      ()).withDefault(Constant(SyncStatus.PENDING_CREATE.name))();
 
 IntColumn get serverId => integer().nullable()(); // ID of the task on the server, nullable if not yet created
 

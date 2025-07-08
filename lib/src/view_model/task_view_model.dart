@@ -14,9 +14,10 @@ class TaskViewModel extends ChangeNotifier {
 
   TaskViewModel(this._taskRepository); // Constructor parameter matches field name
 
-  Future<int> addTask(String title) async {
+  Future<int> addTask(String uuid, String title) async {
     if (title.isEmpty) return Future.value(0);
     final entry = TasksCompanion(
+      uuid: Value(uuid),
       title: Value(title),
       completed: const Value(false),
     );

@@ -31,14 +31,14 @@ class TaskRepositoryImplementation implements TaskRepository {
 
   @override
   Future<bool> updateTask(Task entry) async {
-    await localDataSource.updateTask(entry.copyWith(syncStatus: SyncStatus.pendingUpdate));
+    await localDataSource.updateTask(entry.copyWith(syncStatus: SyncStatus.PENDING_UPDATE));
     syncService.sync();
     return true; // Assuming update is always successful locally
   }
 
   @override
   Future<int> deleteTask(Task entry) async {
-    await localDataSource.updateTask(entry.copyWith(syncStatus: SyncStatus.pendingDelete));
+    await localDataSource.updateTask(entry.copyWith(syncStatus: SyncStatus.PENDING_DELETE));
     syncService.sync();
     return 1; // Assuming one row is deleted for simplicity, adjust if needed
   }
