@@ -11,13 +11,16 @@ import 'package:flutter_database_drift/src/core/network/http_client.dart';
 /// ensuring that changes are synchronized between the local database and the server.
 /// It also handles sending tasks to the server immediately after local operations.
 class TaskRepositoryImplementation implements TaskRepository {
-  final AppDatabase _localDb;
-  final HttpClient _httpClient;
+  final TaskLocalDataSource localDataSource;
+  final TaskRemoteDataSource remoteDataSource;
 
-  TaskRepositoryImplementation(
-    this._localDb,
-    this._httpClient,
-  );
+  // final AppDatabase _localDb;
+  // final HttpClient _httpClient;
+
+  // TaskRepositoryImplementation(
+  //   this._localDb,
+  //   this._httpClient,
+  // );
 
   // Local Database Operations
   @override
@@ -29,7 +32,7 @@ class TaskRepositoryImplementation implements TaskRepository {
   Future<int> addTask(TasksCompanion entry) async {
     final localId = await _localDb.addTask(entry);
     print('Task added locally with ID: $localId');
-    _sendTaskToServer(entry); // Send to server immediately
+    // _sendTaskToServer(entry); // Send to server immediately
     return localId;
   }
 
@@ -37,7 +40,7 @@ class TaskRepositoryImplementation implements TaskRepository {
   Future<bool> updateTask(Task entry) async {
     final result = await _localDb.updateTask(entry);
     print('Task updated locally: ${entry.id}');
-    _updateTaskToServer(entry); // Send update to server immediately
+    // _updateTaskToServer(entry); // Send update to server immediately
     return result;
   }
 
@@ -45,7 +48,7 @@ class TaskRepositoryImplementation implements TaskRepository {
   Future<int> deleteTask(Task entry) async {
     final result = await _localDb.deleteTask(entry);
     print('Task deleted locally with ID: ${entry.id}');
-    _deleteTaskToServer(entry); // Send delete to server immediately
+    // _deleteTaskToServer(entry); // Send delete to server immediately
     return result;
   }
 

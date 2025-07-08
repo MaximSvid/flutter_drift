@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
+import 'package:flutter_database_drift/src/data/services/sync_service.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository_impl.dart';
 
@@ -11,17 +12,34 @@ import 'package:flutter_database_drift/src/core/network/http_client_impl.dart';
 
 /// Main entry point of the Flutter application.
 void main() {
+  // 1. получаем экземпляр SyncService
+  final syncService = getIt(SyncService);
+
+  // 2. запускаем синхронизацию при запуске приложения
+  print('main: Initializing SyncService...');
+  await syncService.sync();
+  // 3. подписываемся на изменения статуса сети
+  Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+    if (result != ConnectivityResult.none) {
+      print('main: Network is available, starting sync...');
+      syncService.sync(); // Start sync when network is available
+    } else {
+      print('main: No network connection, skipping sync.');
+    }
+  });
   runApp(
     MultiProvider(
       providers: [
         // Provide HttpClient
-        Provider<HttpClient>( // NEW
+        Provider<HttpClient>(
+          // NEW
           create: (_) => HttpClientImpl(), // NEW
         ), // NEW
         // 1. Drift database instance
         Provider<AppDatabase>(
           create: (_) => AppDatabase(),
-          dispose: (_, db) => db.close(), // Ensure the database is closed when the app is disposed
+          dispose: (_, db) => db
+              .close(), // Ensure the database is closed when the app is disposed
         ),
         // 2. Task repository instance
         Provider<TaskRepository>(
@@ -32,9 +50,7 @@ void main() {
         ),
         // 3. Task ViewModel instance
         ChangeNotifierProvider<TaskViewModel>(
-          create: (context) => TaskViewModel(
-            context.read<TaskRepository>(),
-          ),
+          create: (context) => TaskViewModel(context.read<TaskRepository>()),
         ),
       ],
       child: const MyApp(),
@@ -50,9 +66,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Drift und Spring Boot Tasks',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const TaskListScreen(),
       debugShowCheckedModeBanner: false, // Disable the debug banner
     );
