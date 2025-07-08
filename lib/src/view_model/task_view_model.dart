@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_database_drift/src/model/database.dart';
+import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
 
 

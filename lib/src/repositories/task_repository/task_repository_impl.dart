@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:flutter_database_drift/src/model/database.dart';
+import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
-import 'package:flutter_database_drift/src/network/http_client.dart';
+import 'package:flutter_database_drift/src/core/network/http_client.dart';
 
 /// Implementation of TaskRepository that handles both local database operations
 /// and remote API operations with a Spring Boot backend.
