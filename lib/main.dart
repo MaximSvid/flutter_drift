@@ -1,45 +1,76 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
+import 'package:flutter_database_drift/src/data/datasources/local/task_local_data_source.dart';
+import 'package:flutter_database_drift/src/data/datasources/remote/task_remote_data_source.dart';
+import 'package:flutter_database_drift/src/data/datasources/local/task_local_data_source_impl.dart';
+import 'package:flutter_database_drift/src/data/datasources/remote/task_remote_data_source_impl.dart';
 import 'package:flutter_database_drift/src/data/services/sync_service.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository_impl.dart';
-
 import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
 import 'package:flutter_database_drift/src/views/task_list_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_database_drift/src/core/network/http_client.dart';
 import 'package:flutter_database_drift/src/core/network/http_client_impl.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:drift/drift.dart';
+import 'package:flutter_database_drift/src/model/tasks.dart'; // Import SyncStatus
 
-/// Main entry point of the Flutter application.
+class CustomValueSerializer extends ValueSerializer {
+  final ValueSerializer _defaultSerializer = driftRuntimeOptions.defaultSerializer;
 
-final getIt = GetIt.instance;
+  @override
+  T fromJson<T>(dynamic json) {
+    if (T == SyncStatus && json is String) {
+      return SyncStatus.values.byName(json) as T;
+    }
+    return _defaultSerializer.fromJson<T>(json);
+  }
 
-void setupDependecies(){
-  getIt.regi
+  @override
+  dynamic toJson<T>(T value) {
+    if (value is SyncStatus) {
+      return value.name;
+    }
+    return _defaultSerializer.toJson<T>(value);
+  }
 }
+
 void main() {
+  driftRuntimeOptions.defaultSerializer = CustomValueSerializer();
   runApp(
     MultiProvider(
       providers: [
-        // Provide HttpClient
         Provider<HttpClient>(
-          // NEW
-          create: (_) => HttpClientImpl(), // NEW
-        ), // NEW
-        // 1. Drift database instance
+          create: (_) => HttpClientImpl(),
+        ),
         Provider<AppDatabase>(
           create: (_) => AppDatabase(),
-          dispose: (_, db) => db
-              .close(), // Ensure the database is closed when the app is disposed
+          dispose: (_, db) => db.close(),
         ),
-        // 2. Task repository instance
-        Provider<TaskRepository>(
-          create: (context) => TaskRepositoryImplementation(
-            context.read<AppDatabase>(),
-            context.read<HttpClient>(), // NEW: Pass HttpClient to repository
+        Provider<TaskLocalDataSource>(
+          create: (context) => TaskLocalDataSourceImpl(context.read<AppDatabase>()),
+        ),
+        Provider<TaskRemoteDataSource>(
+          create: (context) => TaskRemoteDataSourceImpl(context.read<HttpClient>()),
+        ),
+        Provider<Connectivity>(
+          create: (_) => Connectivity(),
+        ),
+        Provider<SyncService>(
+          create: (context) => SyncService(
+            localDataSource: context.read<TaskLocalDataSource>(),
+            remoteDataSource: context.read<TaskRemoteDataSource>(),
+            connectivity: context.read<Connectivity>(),
           ),
         ),
-        // 3. Task ViewModel instance
+        Provider<TaskRepository>(
+          create: (context) => TaskRepositoryImplementation(
+            localDataSource: context.read<TaskLocalDataSource>(),
+            remoteDataSource: context.read<TaskRemoteDataSource>(),
+            syncService: context.read<SyncService>(),
+          ),
+        ),
         ChangeNotifierProvider<TaskViewModel>(
           create: (context) => TaskViewModel(context.read<TaskRepository>()),
         ),
@@ -49,7 +80,6 @@ void main() {
   );
 }
 
-/// The root widget of the application.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -59,7 +89,7 @@ class MyApp extends StatelessWidget {
       title: 'Drift und Spring Boot Tasks',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const TaskListScreen(),
-      debugShowCheckedModeBanner: false, // Disable the debug banner
+      debugShowCheckedModeBanner: false,
     );
   }
 }

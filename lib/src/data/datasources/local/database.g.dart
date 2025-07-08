@@ -50,7 +50,66 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
     defaultValue: const Constant(false),
   );
   @override
-  List<GeneratedColumn> get $columns => [id, title, completed];
+  late final GeneratedColumnWithTypeConverter<SyncStatus, String> syncStatus =
+      GeneratedColumn<String>(
+        'sync_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: Constant(SyncStatus.pendingCreate.name),
+      ).withConverter<SyncStatus>($TasksTable.$convertersyncStatus);
+  static const VerificationMeta _serverIdMeta = const VerificationMeta(
+    'serverId',
+  );
+  @override
+  late final GeneratedColumn<int> serverId = GeneratedColumn<int>(
+    'server_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _isSyncedMeta = const VerificationMeta(
+    'isSynced',
+  );
+  @override
+  late final GeneratedColumn<bool> isSynced = GeneratedColumn<bool>(
+    'is_synced',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_synced" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    title,
+    completed,
+    syncStatus,
+    serverId,
+    isDeleted,
+    isSynced,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -80,6 +139,24 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         completed.isAcceptableOrUnknown(data['completed']!, _completedMeta),
       );
     }
+    if (data.containsKey('server_id')) {
+      context.handle(
+        _serverIdMeta,
+        serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta),
+      );
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
+    if (data.containsKey('is_synced')) {
+      context.handle(
+        _isSyncedMeta,
+        isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta),
+      );
+    }
     return context;
   }
 
@@ -101,6 +178,24 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         DriftSqlType.bool,
         data['${effectivePrefix}completed'],
       )!,
+      syncStatus: $TasksTable.$convertersyncStatus.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}sync_status'],
+        )!,
+      ),
+      serverId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}server_id'],
+      ),
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
+      isSynced: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_synced'],
+      )!,
     );
   }
 
@@ -108,6 +203,9 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
   $TasksTable createAlias(String alias) {
     return $TasksTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<SyncStatus, String> $convertersyncStatus =
+      const SyncStatusConverter();
 }
 
 class Task extends DataClass implements Insertable<Task> {
@@ -119,13 +217,44 @@ class Task extends DataClass implements Insertable<Task> {
 
   /// Indicates whether the task is completed. Defaults to false.
   final bool completed;
-  const Task({required this.id, required this.title, required this.completed});
+  final SyncStatus syncStatus;
+  final int? serverId;
+
+  /// Флаг, указывающий, была ли задача удалена. По умолчанию false.
+  /// Используется для логического удаления задачи без физического удаления из базы данных.
+  /// Это позволяет сохранять историю задач и синхронизировать состояние с сервером.
+  /// При удалении задачи на сервере этот флаг устанавливается в true.
+  final bool isDeleted;
+
+  /// Флаг, указывающий, была ли задача синхронизирована с сервером.
+  /// По умолчанию false. Устанавливается в true после успешной синхронизации с сервером.
+  /// Используется для отслеживания состояния синхронизации задачи.
+  final bool isSynced;
+  const Task({
+    required this.id,
+    required this.title,
+    required this.completed,
+    required this.syncStatus,
+    this.serverId,
+    required this.isDeleted,
+    required this.isSynced,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['title'] = Variable<String>(title);
     map['completed'] = Variable<bool>(completed);
+    {
+      map['sync_status'] = Variable<String>(
+        $TasksTable.$convertersyncStatus.toSql(syncStatus),
+      );
+    }
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<int>(serverId);
+    }
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_synced'] = Variable<bool>(isSynced);
     return map;
   }
 
@@ -134,6 +263,12 @@ class Task extends DataClass implements Insertable<Task> {
       id: Value(id),
       title: Value(title),
       completed: Value(completed),
+      syncStatus: Value(syncStatus),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      isDeleted: Value(isDeleted),
+      isSynced: Value(isSynced),
     );
   }
 
@@ -146,6 +281,10 @@ class Task extends DataClass implements Insertable<Task> {
       id: serializer.fromJson<int>(json['id']),
       title: serializer.fromJson<String>(json['title']),
       completed: serializer.fromJson<bool>(json['completed']),
+      syncStatus: serializer.fromJson<SyncStatus>(json['syncStatus']),
+      serverId: serializer.fromJson<int?>(json['serverId']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isSynced: serializer.fromJson<bool>(json['isSynced']),
     );
   }
   @override
@@ -155,19 +294,41 @@ class Task extends DataClass implements Insertable<Task> {
       'id': serializer.toJson<int>(id),
       'title': serializer.toJson<String>(title),
       'completed': serializer.toJson<bool>(completed),
+      'syncStatus': serializer.toJson<SyncStatus>(syncStatus),
+      'serverId': serializer.toJson<int?>(serverId),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isSynced': serializer.toJson<bool>(isSynced),
     };
   }
 
-  Task copyWith({int? id, String? title, bool? completed}) => Task(
+  Task copyWith({
+    int? id,
+    String? title,
+    bool? completed,
+    SyncStatus? syncStatus,
+    Value<int?> serverId = const Value.absent(),
+    bool? isDeleted,
+    bool? isSynced,
+  }) => Task(
     id: id ?? this.id,
     title: title ?? this.title,
     completed: completed ?? this.completed,
+    syncStatus: syncStatus ?? this.syncStatus,
+    serverId: serverId.present ? serverId.value : this.serverId,
+    isDeleted: isDeleted ?? this.isDeleted,
+    isSynced: isSynced ?? this.isSynced,
   );
   Task copyWithCompanion(TasksCompanion data) {
     return Task(
       id: data.id.present ? data.id.value : this.id,
       title: data.title.present ? data.title.value : this.title,
       completed: data.completed.present ? data.completed.value : this.completed,
+      syncStatus: data.syncStatus.present
+          ? data.syncStatus.value
+          : this.syncStatus,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
     );
   }
 
@@ -176,45 +337,81 @@ class Task extends DataClass implements Insertable<Task> {
     return (StringBuffer('Task(')
           ..write('id: $id, ')
           ..write('title: $title, ')
-          ..write('completed: $completed')
+          ..write('completed: $completed, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isSynced: $isSynced')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, title, completed);
+  int get hashCode => Object.hash(
+    id,
+    title,
+    completed,
+    syncStatus,
+    serverId,
+    isDeleted,
+    isSynced,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Task &&
           other.id == this.id &&
           other.title == this.title &&
-          other.completed == this.completed);
+          other.completed == this.completed &&
+          other.syncStatus == this.syncStatus &&
+          other.serverId == this.serverId &&
+          other.isDeleted == this.isDeleted &&
+          other.isSynced == this.isSynced);
 }
 
 class TasksCompanion extends UpdateCompanion<Task> {
   final Value<int> id;
   final Value<String> title;
   final Value<bool> completed;
+  final Value<SyncStatus> syncStatus;
+  final Value<int?> serverId;
+  final Value<bool> isDeleted;
+  final Value<bool> isSynced;
   const TasksCompanion({
     this.id = const Value.absent(),
     this.title = const Value.absent(),
     this.completed = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isSynced = const Value.absent(),
   });
   TasksCompanion.insert({
     this.id = const Value.absent(),
     required String title,
     this.completed = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isSynced = const Value.absent(),
   }) : title = Value(title);
   static Insertable<Task> custom({
     Expression<int>? id,
     Expression<String>? title,
     Expression<bool>? completed,
+    Expression<String>? syncStatus,
+    Expression<int>? serverId,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isSynced,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (title != null) 'title': title,
       if (completed != null) 'completed': completed,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (serverId != null) 'server_id': serverId,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isSynced != null) 'is_synced': isSynced,
     });
   }
 
@@ -222,11 +419,19 @@ class TasksCompanion extends UpdateCompanion<Task> {
     Value<int>? id,
     Value<String>? title,
     Value<bool>? completed,
+    Value<SyncStatus>? syncStatus,
+    Value<int?>? serverId,
+    Value<bool>? isDeleted,
+    Value<bool>? isSynced,
   }) {
     return TasksCompanion(
       id: id ?? this.id,
       title: title ?? this.title,
       completed: completed ?? this.completed,
+      syncStatus: syncStatus ?? this.syncStatus,
+      serverId: serverId ?? this.serverId,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isSynced: isSynced ?? this.isSynced,
     );
   }
 
@@ -242,6 +447,20 @@ class TasksCompanion extends UpdateCompanion<Task> {
     if (completed.present) {
       map['completed'] = Variable<bool>(completed.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(
+        $TasksTable.$convertersyncStatus.toSql(syncStatus.value),
+      );
+    }
+    if (serverId.present) {
+      map['server_id'] = Variable<int>(serverId.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isSynced.present) {
+      map['is_synced'] = Variable<bool>(isSynced.value);
+    }
     return map;
   }
 
@@ -250,7 +469,11 @@ class TasksCompanion extends UpdateCompanion<Task> {
     return (StringBuffer('TasksCompanion(')
           ..write('id: $id, ')
           ..write('title: $title, ')
-          ..write('completed: $completed')
+          ..write('completed: $completed, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isSynced: $isSynced')
           ..write(')'))
         .toString();
   }
@@ -272,12 +495,20 @@ typedef $$TasksTableCreateCompanionBuilder =
       Value<int> id,
       required String title,
       Value<bool> completed,
+      Value<SyncStatus> syncStatus,
+      Value<int?> serverId,
+      Value<bool> isDeleted,
+      Value<bool> isSynced,
     });
 typedef $$TasksTableUpdateCompanionBuilder =
     TasksCompanion Function({
       Value<int> id,
       Value<String> title,
       Value<bool> completed,
+      Value<SyncStatus> syncStatus,
+      Value<int?> serverId,
+      Value<bool> isDeleted,
+      Value<bool> isSynced,
     });
 
 class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
@@ -300,6 +531,27 @@ class $$TasksTableFilterComposer extends Composer<_$AppDatabase, $TasksTable> {
 
   ColumnFilters<bool> get completed => $composableBuilder(
     column: $table.completed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<SyncStatus, SyncStatus, String>
+  get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<int> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -327,6 +579,26 @@ class $$TasksTableOrderingComposer
     column: $table.completed,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+    column: $table.syncStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get serverId => $composableBuilder(
+    column: $table.serverId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isSynced => $composableBuilder(
+    column: $table.isSynced,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TasksTableAnnotationComposer
@@ -346,6 +618,21 @@ class $$TasksTableAnnotationComposer
 
   GeneratedColumn<bool> get completed =>
       $composableBuilder(column: $table.completed, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<SyncStatus, String> get syncStatus =>
+      $composableBuilder(
+        column: $table.syncStatus,
+        builder: (column) => column,
+      );
+
+  GeneratedColumn<int> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isSynced =>
+      $composableBuilder(column: $table.isSynced, builder: (column) => column);
 }
 
 class $$TasksTableTableManager
@@ -379,16 +666,36 @@ class $$TasksTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<bool> completed = const Value.absent(),
-              }) => TasksCompanion(id: id, title: title, completed: completed),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<int?> serverId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
+              }) => TasksCompanion(
+                id: id,
+                title: title,
+                completed: completed,
+                syncStatus: syncStatus,
+                serverId: serverId,
+                isDeleted: isDeleted,
+                isSynced: isSynced,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String title,
                 Value<bool> completed = const Value.absent(),
+                Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<int?> serverId = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
+                Value<bool> isSynced = const Value.absent(),
               }) => TasksCompanion.insert(
                 id: id,
                 title: title,
                 completed: completed,
+                syncStatus: syncStatus,
+                serverId: serverId,
+                isDeleted: isDeleted,
+                isSynced: isSynced,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
