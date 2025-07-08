@@ -11,22 +11,13 @@ import 'package:flutter_database_drift/src/core/network/http_client.dart';
 import 'package:flutter_database_drift/src/core/network/http_client_impl.dart';
 
 /// Main entry point of the Flutter application.
-void main() {
-  // 1. получаем экземпляр SyncService
-  final syncService = getIt(SyncService);
 
-  // 2. запускаем синхронизацию при запуске приложения
-  print('main: Initializing SyncService...');
-  await syncService.sync();
-  // 3. подписываемся на изменения статуса сети
-  Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-    if (result != ConnectivityResult.none) {
-      print('main: Network is available, starting sync...');
-      syncService.sync(); // Start sync when network is available
-    } else {
-      print('main: No network connection, skipping sync.');
-    }
-  });
+final getIt = GetIt.instance;
+
+void setupDependecies(){
+  getIt.regi
+}
+void main() {
   runApp(
     MultiProvider(
       providers: [
