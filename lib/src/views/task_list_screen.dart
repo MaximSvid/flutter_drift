@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 import 'package:flutter_database_drift/src/model/tasks.dart';
 import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart'; // Import uuid package
 
@@ -42,6 +43,9 @@ class TaskListScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final task = tasks[index];
               return ListTile(
+                onTap: () {
+                  context.go('/task/${task.uuid}');
+                },
                 title: Text(
                   task.title,
                   style: TextStyle(
@@ -61,10 +65,9 @@ class TaskListScreen extends StatelessWidget {
                       : Colors.red,
                 ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: const Icon(Icons.arrow_forward_ios),
                   onPressed: () {
-                    // Call ViewModel method
-                    viewModel.deleteTask(task); // Name already correct
+                    context.go('/task/${task.uuid}');
                   },
                 ),
               );

@@ -15,9 +15,11 @@ import 'package:flutter_database_drift/src/core/network/http_client_impl.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter_database_drift/src/model/tasks.dart'; // Import SyncStatus
+import 'package:flutter_database_drift/src/core/router/app_router.dart';
 
 class CustomValueSerializer extends ValueSerializer {
-  final ValueSerializer _defaultSerializer = driftRuntimeOptions.defaultSerializer;
+  final ValueSerializer _defaultSerializer =
+      driftRuntimeOptions.defaultSerializer;
 
   @override
   T fromJson<T>(dynamic json) {
@@ -41,22 +43,20 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        Provider<HttpClient>(
-          create: (_) => HttpClientImpl(),
-        ),
+        Provider<HttpClient>(create: (_) => HttpClientImpl()),
         Provider<AppDatabase>(
           create: (_) => AppDatabase(),
           dispose: (_, db) => db.close(),
         ),
         Provider<TaskLocalDataSource>(
-          create: (context) => TaskLocalDataSourceImpl(context.read<AppDatabase>()),
+          create: (context) =>
+              TaskLocalDataSourceImpl(context.read<AppDatabase>()),
         ),
         Provider<TaskRemoteDataSource>(
-          create: (context) => TaskRemoteDataSourceImpl(context.read<HttpClient>()),
+          create: (context) =>
+              TaskRemoteDataSourceImpl(context.read<HttpClient>()),
         ),
-        Provider<Connectivity>(
-          create: (_) => Connectivity(),
-        ),
+        Provider<Connectivity>(create: (_) => Connectivity()),
         Provider<SyncService>(
           create: (context) => SyncService(
             localDataSource: context.read<TaskLocalDataSource>(),
@@ -85,10 +85,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: AppRouter.router,
       title: 'Drift und Spring Boot Tasks',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const TaskListScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
