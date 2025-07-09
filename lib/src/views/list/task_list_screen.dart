@@ -1,27 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_database_drift/model/database.dart';
-import 'package:flutter_database_drift/view_model/task_view_model.dart';
+import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
+import 'package:flutter_database_drift/src/model/tasks.dart';
+import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart'; // Import uuid package
 
 /// A StatelessWidget that displays the list of tasks.
 /// It observes the [TaskViewModel] for data changes and dispatches user actions.
 class TaskListScreen extends StatelessWidget {
+  // Keeping as StatelessWidget
   const TaskListScreen({super.key});
+
+  // Create a Uuid generator instance
+  static final _uuid = Uuid();
 
   @override
   Widget build(BuildContext context) {
     // Retrieve the ViewModel from the Provider
-    final viewModel = Provider.of<TaskViewModel>(context, listen: false);
+    // Removed listen: false as StreamBuilder handles listening
+    final viewModel = Provider.of<TaskViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Task List (MVVM + Drift)'),
-      ),
+      appBar: AppBar(title: const Text('Task List (MVVM + Drift)')),
       body: StreamBuilder<List<Task>>(
-        stream: viewModel.tasksStream, // Listen to the stream from the ViewModel
+        stream: viewModel.tasks, // CHANGED: from tasksStream to tasks
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text('No tasks yet'));
@@ -34,6 +43,9 @@ class TaskListScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final task = tasks[index];
               return ListTile(
+                onTap: () {
+                  context.go('/list/${task.uuid}');
+                },
                 title: Text(
                   task.title,
                   style: TextStyle(
@@ -42,18 +54,20 @@ class TaskListScreen extends StatelessWidget {
                         : TextDecoration.none,
                   ),
                 ),
-                leading: Checkbox(
-                  value: task.completed,
-                  onChanged: (_) {
-                    // Call ViewModel method
-                    viewModel.toggleTaskStatus(task);
-                  },
+                // как здесь сделать лампочку - если задача синхранзирована с сервером, то она должна быть зеленой
+                // если задача не синхронезирована с сервером, то она должна быть красной
+                leading: Icon(
+                  task.syncStatus == SyncStatus.SYNCED
+                      ? Icons.check_circle
+                      : Icons.error,
+                  color: task.syncStatus == SyncStatus.SYNCED
+                      ? Colors.green
+                      : Colors.red,
                 ),
                 trailing: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: const Icon(Icons.arrow_forward_ios),
                   onPressed: () {
-                    // Call ViewModel method
-                    viewModel.removeTask(task);
+                    context.go('/list/${task.uuid}');
                   },
                 ),
               );
@@ -90,8 +104,10 @@ class TaskListScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                // Call ViewModel method
-                viewModel.addNewTask(controller.text);
+                // Generate a new UUID
+                final newUuid = _uuid.v4();
+                // Call ViewModel method with UUID
+                viewModel.addTask(newUuid, controller.text); // Pass UUID
                 Navigator.of(context).pop();
               }
             },
