@@ -8,7 +8,6 @@ import 'package:flutter_database_drift/src/data/services/sync_service.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository_impl.dart';
 import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
-import 'package:flutter_database_drift/src/views/list/task_list_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_database_drift/src/core/network/http_client.dart';
 import 'package:flutter_database_drift/src/core/network/http_client_impl.dart';

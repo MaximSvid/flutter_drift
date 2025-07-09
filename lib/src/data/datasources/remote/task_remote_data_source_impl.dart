@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:flutter_database_drift/src/core/network/http_client.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 import 'package:flutter_database_drift/src/data/datasources/remote/task_remote_data_source.dart';
@@ -8,9 +9,17 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
   TaskRemoteDataSourceImpl(this._httpClient);
 
+  String get _baseUrl {
+    if (Platform.isAndroid) {
+      return 'http://10.0.2.2:8080';
+    } else {
+      return 'http://localhost:8080';
+    }
+  }
+
   @override
   Future<Task> createTask(Task task) async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/tasks');
+    final url = Uri.parse('$_baseUrl/api/tasks');
     final response = await _httpClient.post(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -28,7 +37,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
   @override
   Future<void> updateTask(Task task) async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/tasks/${task.serverId}');
+    final url = Uri.parse('$_baseUrl/api/tasks/${task.serverId}');
     final response = await _httpClient.put(
       url,
       headers: {'Content-Type': 'application/json'},
@@ -41,7 +50,7 @@ class TaskRemoteDataSourceImpl implements TaskRemoteDataSource {
 
   @override
   Future<void> deleteTask(int serverId) async {
-    final url = Uri.parse('http://10.0.2.2:8080/api/tasks/$serverId');
+    final url = Uri.parse('$_baseUrl/api/tasks/$serverId');
     final response = await _httpClient.delete(url);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete task');
