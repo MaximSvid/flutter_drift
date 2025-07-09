@@ -62,10 +62,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   ),
                 ),
                 leading: Icon(
-                  task.syncStatus == SyncStatus.SYNCED
+                  task.syncStatus == SyncStatus.synced
                       ? Icons.check_circle
                       : Icons.error,
-                  color: task.syncStatus == SyncStatus.SYNCED
+                  color: task.syncStatus == SyncStatus.synced
                       ? Colors.green
                       : Colors.red,
                 ),

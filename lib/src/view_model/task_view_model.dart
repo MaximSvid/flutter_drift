@@ -19,7 +19,7 @@ class TaskViewModel extends ChangeNotifier {
       completed: const Value(false),
       isDeleted: const Value(false),
       isSynced: const Value(false),
-      syncStatus: const Value(SyncStatus.PENDING_CREATE),
+      syncStatus: const Value(SyncStatus.pendingCreate),
     );
     await _taskRepository.insertTask(task);
   }
@@ -27,7 +27,7 @@ class TaskViewModel extends ChangeNotifier {
   Future<void> updateTaskStatus(Task task, bool completed) async {
     final updatedTask = task.copyWith(
       completed: completed,
-      syncStatus: SyncStatus.PENDING_UPDATE,
+      syncStatus: SyncStatus.pendingUpdate,
     );
     await _taskRepository.updateTask(updatedTask);
   }
@@ -35,7 +35,7 @@ class TaskViewModel extends ChangeNotifier {
   Future<void> deleteTask(Task task) async {
     final deletedTask = task.copyWith(
       isDeleted: true,
-      syncStatus: SyncStatus.PENDING_DELETE,
+      syncStatus: SyncStatus.pendingDelete,
     );
     await _taskRepository.updateTask(deletedTask);
   }

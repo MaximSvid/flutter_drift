@@ -67,7 +67,7 @@ class $TasksTable extends Tasks with TableInfo<$TasksTable, Task> {
         false,
         type: DriftSqlType.string,
         requiredDuringInsert: false,
-        defaultValue: Constant(SyncStatus.PENDING_CREATE.name),
+        defaultValue: Constant(SyncStatus.pendingCreate.name),
       ).withConverter<SyncStatus>($TasksTable.$convertersyncStatus);
   static const VerificationMeta _serverIdMeta = const VerificationMeta(
     'serverId',

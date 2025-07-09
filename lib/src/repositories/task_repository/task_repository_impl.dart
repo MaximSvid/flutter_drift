@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/task_local_data_source.dart';
 import 'package:flutter_database_drift/src/data/datasources/remote/task_remote_data_source.dart';
@@ -18,7 +19,7 @@ class TaskRepositoryImplementation implements TaskRepository {
 
   @override
   Stream<List<Task>> watchAllTasks() {
-    print('Fetching tasks from local data source');
+    debugPrint('Fetching tasks from local data source');
     return localDataSource.watchAllTasks();
   }
 
@@ -38,7 +39,7 @@ class TaskRepositoryImplementation implements TaskRepository {
   Future<void> deleteTask(Task task) async {
     final taskToDelete = task.copyWith(
       isDeleted: true,
-      syncStatus: SyncStatus.PENDING_DELETE,
+      syncStatus: SyncStatus.pendingDelete,
     );
     await localDataSource.updateTask(taskToDelete);
     await syncService.sync();
