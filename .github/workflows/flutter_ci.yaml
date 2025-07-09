@@ -17,7 +17,7 @@ jobs:
 
       - uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.0' # Используйте конкретную версию, например, '3.22.0' или 'stable'
+          flutter-version: 'stable' # Используйте конкретную версию, например, '3.22.0' или 'stable'
           channel: 'stable'
 
       - name: Install dependencies
