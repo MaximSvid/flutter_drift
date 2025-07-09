@@ -26,6 +26,7 @@ class TaskLocalDataSourceImpl implements TaskLocalDataSource {
     return _database.deleteTaskPermanently(localId);
   }
 
+  @override
   Stream<List<Task>> watchAllTasks() {
     return _database.watchAllTasks();
   }
