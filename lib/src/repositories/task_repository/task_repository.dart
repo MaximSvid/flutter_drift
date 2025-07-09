@@ -1,4 +1,3 @@
-import 'package:drift/drift.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 
 abstract class TaskRepository {
