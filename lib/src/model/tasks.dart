@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:drift/drift.dart';
 
 /// Enum representing the synchronization status of a task.

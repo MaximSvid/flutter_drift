@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
+import 'package:flutter_database_drift/src/model/tasks.dart';
 import 'package:flutter_database_drift/src/view_model/task_view_model.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart'; // Import uuid package
 
 /// A StatelessWidget that displays the list of tasks.
 /// It observes the [TaskViewModel] for data changes and dispatches user actions.
-class TaskListScreen extends StatelessWidget { // Keeping as StatelessWidget
+class TaskListScreen extends StatelessWidget {
+  // Keeping as StatelessWidget
   const TaskListScreen({super.key});
 
   // Create a Uuid generator instance
@@ -16,12 +18,10 @@ class TaskListScreen extends StatelessWidget { // Keeping as StatelessWidget
   Widget build(BuildContext context) {
     // Retrieve the ViewModel from the Provider
     // Removed listen: false as StreamBuilder handles listening
-    final viewModel = Provider.of<TaskViewModel>(context); 
+    final viewModel = Provider.of<TaskViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Task List (MVVM + Drift)'),
-      ),
+      appBar: AppBar(title: const Text('Task List (MVVM + Drift)')),
       body: StreamBuilder<List<Task>>(
         stream: viewModel.tasks, // CHANGED: from tasksStream to tasks
         builder: (context, snapshot) {
@@ -50,14 +50,15 @@ class TaskListScreen extends StatelessWidget { // Keeping as StatelessWidget
                         : TextDecoration.none,
                   ),
                 ),
-                leading: Checkbox(
-                  value: task.completed,
-                  onChanged: (bool? newValue) {
-                    if (newValue != null) {
-                      // Call ViewModel method
-                      viewModel.updateTaskStatus(task, newValue); // CHANGED: to updateTaskStatus
-                    }
-                  },
+                // как здесь сделать лампочку - если задача синхранзирована с сервером, то она должна быть зеленой
+                // если задача не синхронезирована с сервером, то она должна быть красной
+                leading: Icon(
+                  task.syncStatus == SyncStatus.SYNCED
+                      ? Icons.check_circle
+                      : Icons.error,
+                  color: task.syncStatus == SyncStatus.SYNCED
+                      ? Colors.green
+                      : Colors.red,
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red),

@@ -1,5 +1,4 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/task_local_data_source.dart';
 import 'package:flutter_database_drift/src/data/datasources/remote/task_remote_data_source.dart';
 import 'package:flutter_database_drift/src/model/tasks.dart';
