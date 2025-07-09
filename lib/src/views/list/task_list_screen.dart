@@ -44,7 +44,7 @@ class TaskListScreen extends StatelessWidget {
               final task = tasks[index];
               return ListTile(
                 onTap: () {
-                  context.go('/task/${task.uuid}');
+                  context.go('/list/${task.uuid}');
                 },
                 title: Text(
                   task.title,
@@ -67,7 +67,7 @@ class TaskListScreen extends StatelessWidget {
                 trailing: IconButton(
                   icon: const Icon(Icons.arrow_forward_ios),
                   onPressed: () {
-                    context.go('/task/${task.uuid}');
+                    context.go('/list/${task.uuid}');
                   },
                 ),
               );

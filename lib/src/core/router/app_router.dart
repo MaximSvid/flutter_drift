@@ -1,56 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_database_drift/src/views/home_screen.dart';
-import 'package:flutter_database_drift/src/views/settings_screen.dart';
+import 'package:flutter_database_drift/src/views/home/home_screen.dart';
+import 'package:flutter_database_drift/src/views/list/task_list_detail_screen.dart';
+import 'package:flutter_database_drift/src/views/list/task_list_screen.dart';
+import 'package:flutter_database_drift/src/views/navigation/scaffold_with_nav_bar.dart';
+import 'package:flutter_database_drift/src/views/settings/settings_screen.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_database_drift/src/views/task_list_screen.dart';
-import 'package:flutter_database_drift/src/views/task_list_detail_screen.dart';
-import 'package:flutter_database_drift/src/views/scaffold_with_nav_bar.dart';
 
 class AppRouter {
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
+  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/list',
+    initialLocation: '/',
     routes: <RouteBase>[
-      GoRoute(
-        path: '/task/:id',
-        builder: (BuildContext context, GoRouterState state) {
-          final String id = state.pathParameters['id']!;
-          return TaskListDetailScreen(taskId: id);
-        },
-      ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return ScaffoldWithNavBar(navigationShell: navigationShell);
-        },
-        branches: <StatefulShellBranch>[
-          StatefulShellBranch(
-            routes: <RouteBase>[
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        builder: (context, state, child) => ScaffoldWithNavBar(child: child),
+        routes: <GoRoute>[
+          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+          GoRoute(
+            path: '/list',
+            builder: (context, state) => const TaskListScreen(),
+            routes: <GoRoute>[
               GoRoute(
-                path: '/home',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const HomeScreen(),
+                path: ':id',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) =>
+                    TaskListDetailScreen(taskId: state.pathParameters['id']!),
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/list',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const TaskListScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: <RouteBase>[
-              GoRoute(
-                path: '/settings',
-                builder: (BuildContext context, GoRouterState state) =>
-                    const SettingsScreen(),
-              ),
-            ],
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
           ),
         ],
       ),
