@@ -23,7 +23,7 @@ class CustomValueSerializer extends ValueSerializer {
   @override
   T fromJson<T>(dynamic json) {
     if (T == SyncStatus && json is String) {
-      return SyncStatus.values.byName(json) as T;
+      return SyncStatus.values.byName(json.toLowerCase()) as T;
     }
     return _defaultSerializer.fromJson<T>(json);
   }
