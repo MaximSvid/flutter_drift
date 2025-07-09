@@ -23,23 +23,29 @@ class TaskRepositoryImplementation implements TaskRepository {
   }
 
   @override
-  Future<int> addTask(TasksCompanion entry) async {
-    final localId = await localDataSource.createTask(entry);
-    syncService.sync();
-    return localId;
+  Future<void> insertTask(TasksCompanion task) async {
+    await localDataSource.createTask(task);
+    await syncService.sync();
   }
 
   @override
-  Future<bool> updateTask(Task entry) async {
-    await localDataSource.updateTask(entry.copyWith(syncStatus: SyncStatus.PENDING_UPDATE));
-    syncService.sync();
-    return true; // Assuming update is always successful locally
+  Future<void> updateTask(Task task) async {
+    await localDataSource.updateTask(task);
+    await syncService.sync();
   }
 
   @override
-  Future<int> deleteTask(Task entry) async {
-    await localDataSource.updateTask(entry.copyWith(syncStatus: SyncStatus.PENDING_DELETE));
-    syncService.sync();
-    return 1; // Assuming one row is deleted for simplicity, adjust if needed
+  Future<void> deleteTask(Task task) async {
+    final taskToDelete = task.copyWith(
+      isDeleted: true,
+      syncStatus: SyncStatus.PENDING_DELETE,
+    );
+    await localDataSource.updateTask(taskToDelete);
+    await syncService.sync();
+  }
+
+  @override
+  Future<void> synchronize() async {
+    await syncService.sync();
   }
 }

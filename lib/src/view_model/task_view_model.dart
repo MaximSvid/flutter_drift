@@ -1,37 +1,47 @@
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_database_drift/src/data/datasources/local/database.dart';
+import 'package:flutter_database_drift/src/model/tasks.dart';
 import 'package:flutter_database_drift/src/repositories/task_repository/task_repository.dart';
 
-
-/// ViewModel for managing task-related UI logic and data flow.
-/// It interacts with the [TaskRepository] to perform data operations
-/// and notifies its listeners about changes.
 class TaskViewModel extends ChangeNotifier {
-  final TaskRepository _taskRepository; // Renamed for consistency
+  final TaskRepository _taskRepository;
 
   Stream<List<Task>> get tasks => _taskRepository.watchAllTasks();
 
-  TaskViewModel(this._taskRepository); // Constructor parameter matches field name
+  TaskViewModel(this._taskRepository);
 
-  Future<int> addTask(String uuid, String title) async {
-    if (title.isEmpty) return Future.value(0);
-    final entry = TasksCompanion(
+  Future<void> addTask(String uuid, String title) async {
+    if (title.isEmpty) return;
+    final task = TasksCompanion(
       uuid: Value(uuid),
       title: Value(title),
       completed: const Value(false),
+      isDeleted: const Value(false),
+      isSynced: const Value(false),
+      syncStatus: const Value(SyncStatus.PENDING_CREATE),
     );
-    return await _taskRepository.addTask(entry);
+    await _taskRepository.insertTask(task);
   }
 
-  // NEW: Update task status
   Future<void> updateTaskStatus(Task task, bool completed) async {
-    final updatedTask = task.copyWith(completed: completed);
+    final updatedTask = task.copyWith(
+      completed: completed,
+      syncStatus: SyncStatus.PENDING_UPDATE,
+    );
     await _taskRepository.updateTask(updatedTask);
   }
 
-  // NEW: Delete task
   Future<void> deleteTask(Task task) async {
-    await _taskRepository.deleteTask(task);
+    final deletedTask = task.copyWith(
+      isDeleted: true,
+      syncStatus: SyncStatus.PENDING_DELETE,
+    );
+    await _taskRepository.updateTask(deletedTask);
+  }
+
+  Future<void> synchronize() async {
+    await _taskRepository.synchronize();
+    notifyListeners();
   }
 }
